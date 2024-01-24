@@ -1,4 +1,4 @@
-module github.com/muhmunt/go-test-jojonomic
+module topup-service
 
 go 1.19
 

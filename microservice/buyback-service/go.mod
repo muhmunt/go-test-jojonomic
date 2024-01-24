@@ -1,4 +1,4 @@
-module github.com/muhmunt/go-test-jojonomic
+module buyback-service
 
 go 1.19
 
