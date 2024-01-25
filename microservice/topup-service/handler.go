@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 	"topup-service/helper"
@@ -44,11 +45,16 @@ func (h *topupHandler) handleTopupRequest(c *gin.Context) {
 	}
 
 	if request.Harga != price.HargaTopup {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   true,
-			"reff_id": helper.GenShortId(),
-			"message": "Kafka not ready",
-		})
+		fmt.Println("Error pricing", err)
+		error := helper.APIResponseError(true, helper.GenShortId(), "Kafka not ready")
+		c.JSON(http.StatusBadRequest, error)
+		return
+	}
+
+	if ok := helper.ValidateGram(request.Gram); !ok {
+		error := helper.APIResponseError(true, helper.GenShortId(), "Kafka not ready")
+		c.JSON(http.StatusBadRequest, error)
+		return
 	}
 
 	transactionData := model.Transaction{
@@ -77,7 +83,7 @@ func (h *topupHandler) handleTopupRequest(c *gin.Context) {
 
 	err = SendMessageToKafka(producer, "topup", request.Norek, bytes)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "failed to send message to Kafka"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message to Kafka"})
 		return
 	}
 
@@ -88,7 +94,19 @@ func (h *topupHandler) handleTopupRequest(c *gin.Context) {
 
 	select {
 	case responseMsg := <-responseCh:
-		c.JSON(200, gin.H{"message": string(responseMsg.Value)})
+		if string(responseMsg.Value) == "false" {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   true,
+				"reff_id": helper.GenShortId(),
+				"message": "Kafka not ready",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"error":   false,
+			"reff_id": helper.GenShortId(),
+		})
 	case <-time.After(10 * time.Second):
 		mu.Lock()
 		delete(responseChannels, request.Norek)

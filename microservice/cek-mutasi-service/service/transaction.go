@@ -1,13 +1,16 @@
 package service
 
 import (
-	"topup-storage-service/helper"
-	"topup-storage-service/model"
-	"topup-storage-service/repository"
+	"cek-mutasi-service/helper"
+	"cek-mutasi-service/model"
+	"cek-mutasi-service/repository"
+	"cek-mutasi-service/request"
+	"errors"
 )
 
 type TransactionService interface {
 	StoreTransaction(request model.Transaction) (model.Transaction, error)
+	FindTransactionByNorek(request request.GetTransactionRequest) ([]model.Transaction, error)
 }
 
 type transactionService struct {
@@ -16,6 +19,17 @@ type transactionService struct {
 
 func NewTransaction(repository repository.TransactionRepository) *transactionService {
 	return &transactionService{repository}
+}
+
+func (s *transactionService) FindTransactionByNorek(request request.GetTransactionRequest) ([]model.Transaction, error) {
+	var getTransaction []model.Transaction
+	getTransaction, err := s.repository.FindById(request.Norek, request.StartDate, request.EndDate)
+
+	if err != nil {
+		return getTransaction, errors.New("transaction not found.")
+	}
+
+	return getTransaction, nil
 }
 
 func (s *transactionService) StoreTransaction(request model.Transaction) (model.Transaction, error) {

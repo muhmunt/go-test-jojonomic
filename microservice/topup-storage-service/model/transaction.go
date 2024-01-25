@@ -4,10 +4,10 @@ type Transaction struct {
 	ID            string
 	Norek         string
 	Type          string
-	Gram          int
+	Gram          string
 	HargaTopup    int
 	HargaBuyback  int
-	SaldoTerakhir int
+	SaldoTerakhir float64
 	Date          int
 }
 

@@ -23,8 +23,6 @@ type MyMessage struct {
 func main() {
 	db := config.InitDB()
 
-	priceRepository := repository.NewPrice(db)
-	priceService := service.NewPrice(priceRepository)
 	accountRepository := repository.NewAccount(db)
 	accountService := service.NewAccount(accountRepository)
 	transactionRepository := repository.NewTransaction(db)
@@ -66,14 +64,24 @@ func main() {
 				continue
 			}
 
-			// getSaldo := accountService.
-			// transaction.SaldoTerakhir =
+			getSaldo, err := accountService.FindById(transaction.Norek)
+			transaction.SaldoTerakhir = getSaldo.Saldo
+
+			var result string
+			result = "true"
+
 			_, err = transactionService.StoreTransaction(transaction)
 
+			_, err = accountService.UpdateOrInsertAccount(transaction)
+
+			if err != nil {
+				result = "false"
+			}
+
 			resp := &sarama.ProducerMessage{
-				Topic: "top",
-				Key:   sarama.StringEncoder(transaction.ID),
-				Value: sarama.StringEncoder("responseText"),
+				Topic: "topup-result",
+				Key:   sarama.StringEncoder(transaction.Norek),
+				Value: sarama.StringEncoder(result),
 			}
 
 			_, _, err = producer.SendMessage(resp)

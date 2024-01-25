@@ -1,6 +1,9 @@
 package main
 
 import (
+	"cek-mutasi-service/config"
+	"cek-mutasi-service/repository"
+	"cek-mutasi-service/service"
 	"log"
 	"sync"
 
@@ -14,6 +17,12 @@ var (
 )
 
 func main() {
+	db := config.InitDB()
+
+	transactionRepository := repository.NewTransaction(db)
+	transactionService := service.NewTransaction(transactionRepository)
+	transactionHandler := NewTransaction(transactionService)
+
 	responseChannels = make(map[string]chan *sarama.ConsumerMessage)
 
 	producer, err := CreateSyncProducer([]string{"kafka:9092"})
@@ -37,7 +46,10 @@ func main() {
 	go ConsumeMessages(partConsumer)
 
 	router := gin.Default()
-	router.GET("/ping", handlePingRequest)
+
+	api := router.Group("/api")
+
+	api.GET("/mutasi", transactionHandler.handleGetTransactionRequest)
 
 	if err := router.Run(":8085"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

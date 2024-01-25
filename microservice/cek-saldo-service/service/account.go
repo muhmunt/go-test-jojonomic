@@ -1,10 +1,10 @@
 package service
 
 import (
+	"cek-saldo-service/helper"
+	"cek-saldo-service/model"
+	"cek-saldo-service/repository"
 	"errors"
-	"topup-storage-service/helper"
-	"topup-storage-service/model"
-	"topup-storage-service/repository"
 )
 
 type AccountService interface {
@@ -20,8 +20,8 @@ func NewAccount(repository repository.AccountRepository) *accountService {
 	return &accountService{repository}
 }
 
-func (s *accountService) FindById(norek string) (model.Account, error) {
-	getAccount, err := s.repository.FindById(norek)
+func (s *accountService) FindById(noRek string) (model.Account, error) {
+	getAccount, err := s.repository.FindById(noRek)
 
 	if err != nil {
 		return getAccount, errors.New("account not found.")

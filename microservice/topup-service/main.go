@@ -41,7 +41,7 @@ func main() {
 	}
 	defer consumer.Close()
 
-	partConsumer, err := CreatePartitionConsumer(consumer, "top")
+	partConsumer, err := CreatePartitionConsumer(consumer, "topup-result")
 	if err != nil {
 		log.Fatalf("Failed to consume partition: %v", err)
 	}
@@ -50,7 +50,8 @@ func main() {
 	go ConsumeMessages(partConsumer)
 
 	router := gin.Default()
-	router.GET("/ping", priceHandler.handleTopupRequest)
+	api := router.Group("api")
+	api.GET("/topup", priceHandler.handleTopupRequest)
 
 	if err := router.Run(":8082"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

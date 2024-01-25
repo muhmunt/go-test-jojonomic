@@ -2,9 +2,9 @@ package service
 
 import (
 	"errors"
-	"topup-storage-service/helper"
-	"topup-storage-service/model"
-	"topup-storage-service/repository"
+	"cek-mutasi-service/helper"
+	"cek-mutasi-service/model"
+	"cek-mutasi-service/repository"
 )
 
 type AccountService interface {

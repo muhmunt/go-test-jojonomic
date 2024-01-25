@@ -2,10 +2,14 @@ package helper
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/shopspring/decimal"
 	"github.com/teris-io/shortid"
 )
 
@@ -36,6 +40,64 @@ func GenShortId() string {
 	}
 
 	return shortId
+}
+
+func AddDecimal(saldo float64, requestGram string) float64 {
+	decimalValue, err := decimal.NewFromString(requestGram)
+	if err != nil {
+		fmt.Println("Error parsing string to decimal:", err)
+		return 0
+	}
+
+	result := decimalValue.Add(decimal.NewFromFloat(saldo))
+
+	resultFloat, _ := result.Float64()
+	return resultFloat
+}
+
+func DecimalFromString(gram string) (float64, error) {
+	decimalValue, err := decimal.NewFromString(gram)
+	if err != nil {
+		fmt.Println("Error parsing string to decimal:", err)
+		return 0, err
+	}
+
+	result := decimalValue.Add(decimal.NewFromFloat(0))
+
+	resultFloat, _ := result.Float64()
+	return resultFloat, nil
+}
+
+func ValidateGram(gram string) bool {
+	resultFloat, _ := DecimalFromString(gram)
+	if hasMoreThan3DecimalDigits(resultFloat) {
+		fmt.Println("Error: Value should have at most 3 digits after the decimal point")
+		return false
+	}
+
+	return true
+}
+
+func removeTrailingZeros(str string) string {
+	num, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		return str
+	}
+
+	return strconv.FormatFloat(num, 'f', -1, 64)
+}
+
+func hasMoreThan3DecimalDigits(num float64) bool {
+	numStr := removeTrailingZeros(fmt.Sprintf("%f", num))
+
+	dotIndex := strings.Index(numStr, ".")
+
+	if len(numStr)-dotIndex-1 > 3 {
+
+		return true
+	}
+
+	return false
 }
 
 func ValidationFormatError(err error) interface{} {

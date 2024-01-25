@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"topup-storage-service/model"
+	"cek-mutasi-service/model"
 
 	"gorm.io/gorm"
 )

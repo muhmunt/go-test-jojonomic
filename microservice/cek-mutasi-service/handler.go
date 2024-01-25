@@ -1,62 +1,44 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
-	"time"
+	"cek-mutasi-service/helper"
+	"cek-mutasi-service/request"
+	"cek-mutasi-service/service"
+	"net/http"
 
-	"github.com/IBM/sarama"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
-type MyMessage struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Value string `json:"value"`
+type transactionHandler struct {
+	transactionService service.TransactionService
 }
 
-func handlePingRequest(c *gin.Context) {
-	requestID := uuid.New().String()
+func NewTransaction(service service.TransactionService) *transactionHandler {
+	return &transactionHandler{service}
+}
 
-	message := MyMessage{
-		ID:    requestID,
-		Name:  "Ping",
-		Value: "Pong",
-	}
+func (h *transactionHandler) handleGetTransactionRequest(c *gin.Context) {
+	var request request.GetTransactionRequest
 
-	bytes, err := json.Marshal(message)
+	err := c.ShouldBindJSON(&request)
+
 	if err != nil {
-		c.JSON(500, gin.H{"error": "failed to marshal JSON"})
+		errors := helper.ValidationFormatError(err)
+		error := helper.APIResponseError(true, helper.GenShortId(), errors)
+		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, error)
+		return
+	}
+	transaction, err := h.transactionService.FindTransactionByNorek(request)
+
+	if err != nil {
+		error := helper.APIResponseError(true, helper.GenShortId(), "kafka not ready")
+		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, error)
 		return
 	}
 
-	producer, err := CreateSyncProducer([]string{"kafka:9092"})
-	if err != nil {
-		log.Printf("Failed to create producer: %v", err)
-		c.JSON(500, gin.H{"error": "failed to create Kafka producer"})
-		return
-	}
-	defer producer.Close()
-
-	err = SendMessageToKafka(producer, "ping", requestID, bytes)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "failed to send message to Kafka"})
-		return
-	}
-
-	responseCh := make(chan *sarama.ConsumerMessage)
-	mu.Lock()
-	responseChannels[requestID] = responseCh
-	mu.Unlock()
-
-	select {
-	case responseMsg := <-responseCh:
-		c.JSON(200, gin.H{"message": string(responseMsg.Value)})
-	case <-time.After(10 * time.Second):
-		mu.Lock()
-		delete(responseChannels, requestID)
-		mu.Unlock()
-		c.JSON(500, gin.H{"error": "timeout waiting for response"})
-	}
+	c.JSON(http.StatusOK, gin.H{
+		"error":   false,
+		"reff_id": helper.GenShortId(),
+		"data":    transaction,
+	})
 }

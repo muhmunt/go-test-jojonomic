@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"topup-storage-service/model"
+	"cek-saldo-service/model"
 
 	"gorm.io/gorm"
 )
@@ -9,7 +9,7 @@ import (
 type AccountRepository interface {
 	Update(noRek string, account model.Account) (model.Account, error)
 	Create(account model.Account) (model.Account, error)
-	FindById(norek string) (model.Account, error)
+	FindById(noRek string) (model.Account, error)
 }
 
 type accountRepository struct {
@@ -40,10 +40,10 @@ func (r *accountRepository) Create(account model.Account) (model.Account, error)
 	return account, nil
 }
 
-func (r *accountRepository) FindById(norek string) (model.Account, error) {
+func (r *accountRepository) FindById(noRek string) (model.Account, error) {
 	var getAccount model.Account
 
-	err := r.db.Where("norek = ?", norek).
+	err := r.db.Where("norek = ?", noRek).
 		First(&getAccount).Error
 
 	if err != nil {

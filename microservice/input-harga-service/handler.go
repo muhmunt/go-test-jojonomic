@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"input-harga-service/helper"
 	"input-harga-service/model"
 	"input-harga-service/request"
@@ -76,7 +75,6 @@ func (h *priceHandler) handleInputPriceRequest(c *gin.Context) {
 
 	select {
 	case responseMsg := <-responseCh:
-		fmt.Println(responseMsg.Value)
 		if string(responseMsg.Value) == "false" {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   true,
