@@ -69,7 +69,8 @@ func (h *topupHandler) handleTopupRequest(c *gin.Context) {
 
 	bytes, err := json.Marshal(transactionData)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to marshal JSON"})
+		error := helper.APIResponseError(true, helper.GenShortId(), "failed to marshal JSON")
+		c.JSON(http.StatusInternalServerError, error)
 		return
 	}
 
@@ -83,7 +84,8 @@ func (h *topupHandler) handleTopupRequest(c *gin.Context) {
 
 	err = SendMessageToKafka(producer, "topup", request.Norek, bytes)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message to Kafka"})
+		error := helper.APIResponseError(true, helper.GenShortId(), "failed to send message to Kafka")
+		c.JSON(http.StatusInternalServerError, error)
 		return
 	}
 

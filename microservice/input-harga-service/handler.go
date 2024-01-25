@@ -50,21 +50,24 @@ func (h *priceHandler) handleInputPriceRequest(c *gin.Context) {
 
 	bytes, err := json.Marshal(priceData)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to marshal JSON"})
+		error := helper.APIResponseError(true, helper.GenShortId(), "failed to marshal JSON")
+		c.JSON(http.StatusInternalServerError, error)
 		return
 	}
 
 	producer, err := CreateSyncProducer([]string{"kafka:9092"})
 	if err != nil {
 		log.Printf("Failed to create producer: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create Kafka producer"})
+		error := helper.APIResponseError(true, helper.GenShortId(), "failed to create Kafka producer")
+		c.JSON(http.StatusInternalServerError, error)
 		return
 	}
 	defer producer.Close()
 
 	err = SendMessageToKafka(producer, "input-harga", request.AdminID, bytes)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send message to Kafka"})
+		error := helper.APIResponseError(true, helper.GenShortId(), "failed to send message to Kafka")
+		c.JSON(http.StatusInternalServerError, error)
 		return
 	}
 
@@ -76,11 +79,8 @@ func (h *priceHandler) handleInputPriceRequest(c *gin.Context) {
 	select {
 	case responseMsg := <-responseCh:
 		if string(responseMsg.Value) == "false" {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   true,
-				"reff_id": helper.GenShortId(),
-				"message": "Kafka not ready",
-			})
+			error := helper.APIResponseError(true, helper.GenShortId(), "Kafka not ready")
+			c.JSON(http.StatusInternalServerError, error)
 			return
 		}
 
@@ -93,6 +93,7 @@ func (h *priceHandler) handleInputPriceRequest(c *gin.Context) {
 		mu.Lock()
 		delete(responseChannels, request.AdminID)
 		mu.Unlock()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "timeout waiting for response"})
+		error := helper.APIResponseError(true, helper.GenShortId(), "timeout waiting for response")
+		c.JSON(http.StatusInternalServerError, error)
 	}
 }

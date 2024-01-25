@@ -23,28 +23,6 @@ func main() {
 	accountService := service.NewAccount(accountRepository)
 	transactionHandler := NewAccount(accountService)
 
-	responseChannels = make(map[string]chan *sarama.ConsumerMessage)
-
-	producer, err := CreateSyncProducer([]string{"kafka:9092"})
-	if err != nil {
-		log.Fatalf("Failed to create producer: %v", err)
-	}
-	defer producer.Close()
-
-	consumer, err := CreateConsumer([]string{"kafka:9092"})
-	if err != nil {
-		log.Fatalf("Failed to create consumer: %v", err)
-	}
-	defer consumer.Close()
-
-	partConsumer, err := CreatePartitionConsumer(consumer, "pong")
-	if err != nil {
-		log.Fatalf("Failed to consume partition: %v", err)
-	}
-	defer partConsumer.Close()
-
-	go ConsumeMessages(partConsumer)
-
 	router := gin.Default()
 
 	api := router.Group("/api")

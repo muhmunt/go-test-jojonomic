@@ -3,9 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"topup-storage-service/config"
 	"topup-storage-service/model"
 	"topup-storage-service/repository"
@@ -45,8 +42,6 @@ func main() {
 		log.Fatalf("Failed to consume partition: %v", err)
 	}
 	defer partConsumer.Close()
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	for {
 		select {
@@ -88,8 +83,6 @@ func main() {
 			if err != nil {
 				log.Printf("Failed to send message to Kafka: %v", err)
 			}
-		case <-signals:
-			log.Println("Received interrupt signal, exiting")
 		}
 	}
 }

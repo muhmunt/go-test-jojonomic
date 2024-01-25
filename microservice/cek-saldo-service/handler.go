@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cek-saldo-service/formatter"
 	"cek-saldo-service/helper"
 	"cek-saldo-service/request"
 	"cek-saldo-service/service"
@@ -28,7 +29,7 @@ func (h *accountHandler) handleGetAccountRequest(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusUnprocessableEntity, error)
 		return
 	}
-	transaction, err := h.accountService.FindById(request.Norek)
+	account, err := h.accountService.FindById(request.Norek)
 
 	if err != nil {
 		error := helper.APIResponseError(true, helper.GenShortId(), "kafka not ready")
@@ -39,6 +40,6 @@ func (h *accountHandler) handleGetAccountRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"error":   false,
 		"reff_id": helper.GenShortId(),
-		"data":    transaction,
+		"data":    formatter.AccountFormatter(account),
 	})
 }

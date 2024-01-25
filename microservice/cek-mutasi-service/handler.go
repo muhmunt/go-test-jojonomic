@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cek-mutasi-service/formatter"
 	"cek-mutasi-service/helper"
 	"cek-mutasi-service/request"
 	"cek-mutasi-service/service"
@@ -39,6 +40,6 @@ func (h *transactionHandler) handleGetTransactionRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"error":   false,
 		"reff_id": helper.GenShortId(),
-		"data":    transaction,
+		"data":    formatter.FormatTransactions(transaction),
 	})
 }
