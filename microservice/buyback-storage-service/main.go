@@ -1,6 +1,10 @@
 package main
 
 import (
+	"buyback-storage-service/config"
+	"buyback-storage-service/model"
+	"buyback-storage-service/repository"
+	"buyback-storage-service/service"
 	"encoding/json"
 	"log"
 	"os"
@@ -17,6 +21,13 @@ type MyMessage struct {
 }
 
 func main() {
+	db := config.InitDB()
+
+	accountRepository := repository.NewAccount(db)
+	accountService := service.NewAccount(accountRepository)
+	transactionRepository := repository.NewTransaction(db)
+	transactionService := service.NewTransaction(transactionRepository)
+
 	producer, err := sarama.NewSyncProducer([]string{"kafka:9092"}, nil)
 	if err != nil {
 		log.Fatalf("Failed to create producer: %v", err)
@@ -45,22 +56,32 @@ func main() {
 				return
 			}
 
-			var receivedMessage MyMessage
-			err := json.Unmarshal(msg.Value, &receivedMessage)
+			var transaction model.Transaction
+			err := json.Unmarshal(msg.Value, &transaction)
 
 			if err != nil {
 				log.Printf("Error unmarshaling JSON: %v\n", err)
 				continue
 			}
 
-			log.Printf("Received message: %+v\n", receivedMessage)
+			getSaldo, err := accountService.FindById(transaction.Norek)
+			transaction.SaldoTerakhir = getSaldo.Saldo
 
-			responseText := receivedMessage.Name + " " + receivedMessage.Value + " ( " + receivedMessage.ID + " ) "
+			var result string
+			result = "true"
+
+			_, err = transactionService.StoreTransaction(transaction)
+
+			_, err = accountService.UpdateOrInsertAccount(transaction)
+
+			if err != nil {
+				result = "false"
+			}
 
 			resp := &sarama.ProducerMessage{
 				Topic: "buyback-result",
-				Key:   sarama.StringEncoder(receivedMessage.ID),
-				Value: sarama.StringEncoder(responseText),
+				Key:   sarama.StringEncoder(transaction.Norek),
+				Value: sarama.StringEncoder(result),
 			}
 
 			_, _, err = producer.SendMessage(resp)

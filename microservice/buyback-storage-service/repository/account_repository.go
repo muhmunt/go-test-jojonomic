@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"buyback-service/model"
+	"buyback-storage-service/model"
 
 	"gorm.io/gorm"
 )

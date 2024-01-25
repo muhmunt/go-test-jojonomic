@@ -1,9 +1,9 @@
 package service
 
 import (
-	"buyback-service/helper"
-	"buyback-service/model"
-	"buyback-service/repository"
+	"buyback-storage-service/helper"
+	"buyback-storage-service/model"
+	"buyback-storage-service/repository"
 	"errors"
 )
 
@@ -36,7 +36,7 @@ func (s *accountService) UpdateOrInsertAccount(request model.Transaction) (model
 	getAccount, err := s.FindById(request.Norek)
 
 	if err == nil {
-		getAccount.Saldo = helper.AddDecimal(getAccount.Saldo, request.Gram)
+		getAccount.Saldo = helper.SubDecimal(getAccount.Saldo, request.Gram)
 		newAccount, err := s.repository.Update(getAccount.Norek, getAccount)
 
 		if err != nil {

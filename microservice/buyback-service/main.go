@@ -1,6 +1,9 @@
 package main
 
 import (
+	"buyback-service/config"
+	"buyback-service/repository"
+	"buyback-service/service"
 	"log"
 	"sync"
 
@@ -14,6 +17,16 @@ var (
 )
 
 func main() {
+	db := config.InitDB()
+
+	priceRepository := repository.NewPrice(db)
+	priceService := service.NewPrice(priceRepository)
+	accountRepository := repository.NewAccount(db)
+	accountService := service.NewAccount(accountRepository)
+	transactionRepository := repository.NewTransaction(db)
+	transactionService := service.NewTransaction(transactionRepository)
+	buybackHandler := NewBuyback(priceService, accountService, transactionService)
+
 	responseChannels = make(map[string]chan *sarama.ConsumerMessage)
 
 	producer, err := CreateSyncProducer([]string{"kafka:9092"})
@@ -37,7 +50,8 @@ func main() {
 	go ConsumeMessages(partConsumer)
 
 	router := gin.Default()
-	router.GET("/ping", handlePingRequest)
+	api := router.Group("api")
+	api.POST("/buyback", buybackHandler.handleBuybackRequest)
 
 	if err := router.Run(":8087"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

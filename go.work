@@ -3,6 +3,7 @@ go 1.19
 use (
 	.
 	./microservice/buyback-service
+	./microservice/buyback-storage-service
 	./microservice/cek-harga-service
 	./microservice/cek-mutasi-service
 	./microservice/cek-saldo-service

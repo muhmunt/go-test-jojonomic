@@ -51,7 +51,7 @@ func main() {
 
 	router := gin.Default()
 	api := router.Group("api")
-	api.GET("/topup", priceHandler.handleTopupRequest)
+	api.POST("/topup", priceHandler.handleTopupRequest)
 
 	if err := router.Run(":8082"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)

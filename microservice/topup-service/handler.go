@@ -95,11 +95,8 @@ func (h *topupHandler) handleTopupRequest(c *gin.Context) {
 	select {
 	case responseMsg := <-responseCh:
 		if string(responseMsg.Value) == "false" {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   true,
-				"reff_id": helper.GenShortId(),
-				"message": "Kafka not ready",
-			})
+			error := helper.APIResponseError(true, helper.GenShortId(), "Kafka not ready")
+			c.JSON(http.StatusInternalServerError, error)
 			return
 		}
 
